@@ -13,40 +13,66 @@
 </head>
 <body>
   <h2>RSI Dashboard</h2>
+
+  <!-- RSI Option -->
+  <label for="rsiLength">RSI Length:</label>
+  <select id="rsiLength">
+    <option value="14" selected>14</option>
+    <option value="24">24</option>
+  </select>
+
   <table>
-    <tr><th>Symbol</th><th>Price</th><th>RSI 14</th><th>RSI 24</th><th>Signal</th></tr>
-    <tr id="row"></tr>
+    <tr><th>Symbol</th><th>Price</th><th>RSI</th><th>Signal</th></tr>
+    <tbody id="rows"></tbody>
   </table>
 
   <h3>Notifications</h3>
   <div id="notifications"></div>
 
 <script>
-// Example: Binance API call
-async function fetchData(symbol="BTCUSDT") {
-  let priceData = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${symbol}`);
-  let priceJson = await priceData.json();
-  let price = parseFloat(priceJson.price);
+// Symbol list
+let symbols = [
+  "BTCUSDT","ETHUSDT","BNBUSDT","XRPUSDT",
+  "ADAUSDT","SOLUSDT","DOGEUSDT","DOTUSDT",
+  "MATICUSDT","LTCUSDT","TRXUSDT","SHIBUSDT",
+  "AVAXUSDT","ATOMUSDT","NEARUSDT","FILUSDT"
+];
 
-  // Dummy RSI values (replace with calculation logic)
-  let rsi14 = Math.floor(Math.random()*100);
-  let rsi24 = Math.floor(Math.random()*100);
+// Fetch data for all symbols
+async function fetchData() {
+  let rsiLength = parseInt(document.getElementById("rsiLength").value);
+  let rowsHTML = "";
 
-  // Condition check
-  let signal = "";
-  if(rsi14 > 70 || rsi24 > 70) signal = "Sell";
-  else if(rsi14 < 30 || rsi24 < 30) signal = "Buy";
+  for (let symbol of symbols) {
+    let priceData = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${symbol}`);
+    let priceJson = await priceData.json();
+    let price = parseFloat(priceJson.price);
 
-  // Update table row
-  document.getElementById("row").innerHTML =
-    `<td>${symbol}</td><td>${price}</td><td>${rsi14}</td><td>${rsi24}</td><td class="${signal.toLowerCase()}">${signal}</td>`;
+    // Dummy RSI calculation (replace with TradingView logic if needed)
+    let rsi = Math.floor(Math.random()*100);
 
-  // Notification backlog
-  if(signal) {
-    let time = new Date().toLocaleTimeString();
-    let note = `${time} - ${symbol} - ${signal} (RSI14:${rsi14}, RSI24:${rsi24})`;
-    addNotification(note);
+    // Condition check
+    let signal = "";
+    if(rsi > 70) signal = "Sell";
+    else if(rsi < 30) signal = "Buy";
+
+    // Build row
+    rowsHTML += `<tr>
+      <td>${symbol}</td>
+      <td>${price}</td>
+      <td>${rsi} (RSI${rsiLength})</td>
+      <td class="${signal.toLowerCase()}">${signal}</td>
+    </tr>`;
+
+    // Notification backlog
+    if(signal) {
+      let time = new Date().toLocaleTimeString();
+      let note = `${time} - ${symbol} - ${signal} (RSI${rsiLength}:${rsi})`;
+      addNotification(note);
+    }
   }
+
+  document.getElementById("rows").innerHTML = rowsHTML;
 }
 
 // Notification section with localStorage
@@ -64,7 +90,7 @@ function renderNotifications() {
 
 // Run
 renderNotifications();
-setInterval(()=>fetchData("BTCUSDT"), 5000); // refresh every 5s
+setInterval(fetchData, 5000); // refresh every 5s
 </script>
 </body>
 </html>
