@@ -72,6 +72,9 @@ function saveSymbols() {
   localStorage.setItem("symbols", JSON.stringify(symbols));
 }
 
+// State tracking for each symbol
+let states = {}; // {symbol: laststate}
+
 // Fetch data for all symbols
 async function fetchData() {
   let rsiLength = parseInt(document.getElementById("rsiLength").value);
@@ -86,10 +89,20 @@ async function fetchData() {
     // Dummy RSI calculation (replace with actual RSI logic if needed)
     let rsi = Math.floor(Math.random()*100);
 
-    // Condition check
+    // Determine overbought/oversold
+    let isOverbought = rsi >= 70;
+    let isOversold   = rsi <= 30;
+
+    // State change logic
     let signal = "";
-    if(rsi > 70) signal = "Sell";
-    else if(rsi < 30) signal = "Buy";
+    let laststate = states[symbol] || 0;
+
+    if(laststate === 2 && isOverbought) signal = "Sell";
+    if(laststate === 1 && isOversold)   signal = "Buy";
+
+    if(isOverbought) laststate = 1;
+    if(isOversold)   laststate = 2;
+    states[symbol] = laststate;
 
     // Build row
     rowsHTML += `<tr>
