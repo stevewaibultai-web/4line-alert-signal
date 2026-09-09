@@ -60,13 +60,11 @@ let savedTF  = localStorage.getItem("timeframe") || "1m";
 document.getElementById("rsiLength").value = savedRSI;
 document.getElementById("timeframe").value = savedTF;
 
-// Save settings
 function saveSettings() {
   localStorage.setItem("rsiLength", document.getElementById("rsiLength").value);
   localStorage.setItem("timeframe", document.getElementById("timeframe").value);
 }
 
-// Save symbols
 function saveSymbols() {
   symbols = document.getElementById("symbolsEditor").value.split(",").map(s=>s.trim()).filter(s=>s);
   localStorage.setItem("symbols", JSON.stringify(symbols));
@@ -74,6 +72,17 @@ function saveSymbols() {
 
 // State tracking for each symbol
 let states = {}; // {symbol: laststate}
+
+// RSI calculation (simple version, replace with full candle-based RSI if needed)
+function calcRSI(values, length) {
+  let gains = 0, losses = 0;
+  for(let i=1;i<values.length;i++){
+    let diff = values[i]-values[i-1];
+    if(diff>=0) gains+=diff; else losses-=diff;
+  }
+  let rs = gains/Math.max(losses,1);
+  return 100-(100/(1+rs));
+}
 
 // Fetch data for all symbols
 async function fetchData() {
@@ -86,14 +95,12 @@ async function fetchData() {
     let priceJson = await priceData.json();
     let price = parseFloat(priceJson.price);
 
-    // Dummy RSI calculation (replace with actual RSI logic if needed)
+    // Dummy RSI (replace with candle fetch + calcRSI)
     let rsi = Math.floor(Math.random()*100);
 
-    // Determine overbought/oversold
     let isOverbought = rsi >= 70;
     let isOversold   = rsi <= 30;
 
-    // State change logic (like Pine Script)
     let signal = "";
     let laststate = states[symbol] || 0;
 
@@ -104,7 +111,6 @@ async function fetchData() {
     if(isOversold)   laststate = 2;
     states[symbol] = laststate;
 
-    // Build row
     rowsHTML += `<tr>
       <td>${symbol}</td>
       <td>${price}</td>
@@ -112,7 +118,6 @@ async function fetchData() {
       <td class="${signal.toLowerCase()}">${signal}</td>
     </tr>`;
 
-    // Backlog notifications only when dashboard is closed
     if(signal && !document.hasFocus()) {
       let time = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', second: 'numeric', hour12: true });
       let note = `${time} - ${symbol} - ${signal} (RSI${rsiLength}:${rsi}, TF:${timeframe})`;
@@ -123,7 +128,6 @@ async function fetchData() {
   document.getElementById("rows").innerHTML = rowsHTML;
 }
 
-// Notification section with localStorage
 function addNotification(note) {
   let notes = JSON.parse(localStorage.getItem("notes")||"[]");
   notes.push(note);
@@ -141,9 +145,8 @@ function clearNotifications() {
   renderNotifications();
 }
 
-// Run
 renderNotifications();
-setInterval(fetchData, 5000); // refresh every 5s
+setInterval(fetchData, 5000);
 </script>
 </body>
 </html>
