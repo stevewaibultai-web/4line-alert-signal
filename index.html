@@ -93,7 +93,7 @@ async function fetchData() {
     let isOverbought = rsi >= 70;
     let isOversold   = rsi <= 30;
 
-    // State change logic
+    // State change logic (like Pine Script)
     let signal = "";
     let laststate = states[symbol] || 0;
 
