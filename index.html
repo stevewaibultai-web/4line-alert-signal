@@ -10,6 +10,7 @@
     .buy { color:lime; }
     .sell { color:red; }
     textarea { width:100%; height:80px; background:#222; color:#eee; }
+    button { margin-top:10px; }
   </style>
 </head>
 <body>
@@ -17,15 +18,15 @@
 
   <!-- RSI Option -->
   <label for="rsiLength">RSI Length:</label>
-  <select id="rsiLength">
-    <option value="14" selected>14</option>
+  <select id="rsiLength" onchange="saveSettings()">
+    <option value="14">14</option>
     <option value="24">24</option>
   </select>
 
   <!-- Timeframe Option -->
   <label for="timeframe">Timeframe:</label>
-  <select id="timeframe">
-    <option value="1m" selected>1m</option>
+  <select id="timeframe" onchange="saveSettings()">
+    <option value="1m">1m</option>
     <option value="3m">3m</option>
     <option value="5m">5m</option>
   </select>
@@ -42,9 +43,10 @@
 
   <h3>Notifications</h3>
   <div id="notifications"></div>
+  <button onclick="clearNotifications()">Clear Notifications</button>
 
 <script>
-// Load symbols from localStorage or default
+// Load settings from localStorage
 let symbols = JSON.parse(localStorage.getItem("symbols")) || [
   "BTCUSDT","ETHUSDT","BNBUSDT","XRPUSDT",
   "ADAUSDT","SOLUSDT","DOGEUSDT","DOTUSDT",
@@ -52,6 +54,17 @@ let symbols = JSON.parse(localStorage.getItem("symbols")) || [
   "AVAXUSDT","ATOMUSDT","NEARUSDT","FILUSDT"
 ];
 document.getElementById("symbolsEditor").value = symbols.join(",");
+
+let savedRSI = localStorage.getItem("rsiLength") || "14";
+let savedTF  = localStorage.getItem("timeframe") || "1m";
+document.getElementById("rsiLength").value = savedRSI;
+document.getElementById("timeframe").value = savedTF;
+
+// Save settings
+function saveSettings() {
+  localStorage.setItem("rsiLength", document.getElementById("rsiLength").value);
+  localStorage.setItem("timeframe", document.getElementById("timeframe").value);
+}
 
 // Save symbols
 function saveSymbols() {
@@ -86,8 +99,8 @@ async function fetchData() {
       <td class="${signal.toLowerCase()}">${signal}</td>
     </tr>`;
 
-    // Notification backlog
-    if(signal) {
+    // Backlog notifications only when dashboard is closed
+    if(signal && !document.hasFocus()) {
       let time = new Date().toLocaleTimeString();
       let note = `${time} - ${symbol} - ${signal} (RSI${rsiLength}:${rsi}, TF:${timeframe})`;
       addNotification(note);
@@ -108,6 +121,11 @@ function addNotification(note) {
 function renderNotifications() {
   let notes = JSON.parse(localStorage.getItem("notes")||"[]");
   document.getElementById("notifications").innerHTML = notes.map(n=>"<p>"+n+"</p>").join("");
+}
+
+function clearNotifications() {
+  localStorage.removeItem("notes");
+  renderNotifications();
 }
 
 // Run
