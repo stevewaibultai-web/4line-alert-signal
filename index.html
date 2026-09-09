@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>RSI Dashboard</title>
+  <style>
+    body { font-family: Arial; background:#111; color:#eee; }
+    table { width:100%; border-collapse: collapse; margin-bottom:20px; }
+    th, td { border:1px solid #444; padding:8px; text-align:center; }
+    #notifications { background:#222; padding:10px; min-height:100px; }
+    .buy { color:lime; }
+    .sell { color:red; }
+  </style>
+</head>
+<body>
+  <h2>RSI Dashboard</h2>
+  <table>
+    <tr><th>Symbol</th><th>Price</th><th>RSI 14</th><th>RSI 24</th><th>Signal</th></tr>
+    <tr id="row"></tr>
+  </table>
+
+  <h3>Notifications</h3>
+  <div id="notifications"></div>
+
+<script>
+// Example: Binance API call
+async function fetchData(symbol="BTCUSDT") {
+  let priceData = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${symbol}`);
+  let priceJson = await priceData.json();
+  let price = parseFloat(priceJson.price);
+
+  // Dummy RSI values (replace with calculation logic)
+  let rsi14 = Math.floor(Math.random()*100);
+  let rsi24 = Math.floor(Math.random()*100);
+
+  // Condition check
+  let signal = "";
+  if(rsi14 > 70 || rsi24 > 70) signal = "Sell";
+  else if(rsi14 < 30 || rsi24 < 30) signal = "Buy";
+
+  // Update table row
+  document.getElementById("row").innerHTML =
+    `<td>${symbol}</td><td>${price}</td><td>${rsi14}</td><td>${rsi24}</td><td class="${signal.toLowerCase()}">${signal}</td>`;
+
+  // Notification backlog
+  if(signal) {
+    let time = new Date().toLocaleTimeString();
+    let note = `${time} - ${symbol} - ${signal} (RSI14:${rsi14}, RSI24:${rsi24})`;
+    addNotification(note);
+  }
+}
+
+// Notification section with localStorage
+function addNotification(note) {
+  let notes = JSON.parse(localStorage.getItem("notes")||"[]");
+  notes.push(note);
+  localStorage.setItem("notes", JSON.stringify(notes));
+  renderNotifications();
+}
+
+function renderNotifications() {
+  let notes = JSON.parse(localStorage.getItem("notes")||"[]");
+  document.getElementById("notifications").innerHTML = notes.map(n=>"<p>"+n+"</p>").join("");
+}
+
+// Run
+renderNotifications();
+setInterval(()=>fetchData("BTCUSDT"), 5000); // refresh every 5s
+</script>
+</body>
+</html>
