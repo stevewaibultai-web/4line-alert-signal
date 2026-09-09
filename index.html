@@ -114,7 +114,7 @@ async function fetchData() {
 
     // Backlog notifications only when dashboard is closed
     if(signal && !document.hasFocus()) {
-      let time = new Date().toLocaleTimeString();
+      let time = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', second: 'numeric', hour12: true });
       let note = `${time} - ${symbol} - ${signal} (RSI${rsiLength}:${rsi}, TF:${timeframe})`;
       addNotification(note);
     }
