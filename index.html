@@ -1,175 +1,233 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Cross Dashboard</title>
+  <meta charset="UTF-8">
+  <title>Trading Alert Dashboard</title>
   <style>
-    body { font-family: Arial; background:#111; color:#eee; }
-    table { width:100%; border-collapse: collapse; margin-bottom:20px; }
-    th, td { border:1px solid #444; padding:8px; text-align:center; }
-    #notifications { background:#222; padding:10px; min-height:100px; }
-    .buy { color:lime; }
-    .sell { color:red; }
-    textarea { width:100%; height:80px; background:#222; color:#eee; }
+    body {
+      background:#0b1426; 
+      color:#fff; 
+      font-family:Segoe UI; 
+      text-align:center; 
+      padding:20px;
+    }
+    input, select {
+      background-color: #1e2a3a;   /* dark background */
+      color: #ffffff;              /* white text */
+      border: 1px solid #3a4a5a;   /* subtle gray border */
+      padding: 4px;
+    }
+    button {
+  background-color: #1e2a3a;   /* dark background */
+  color: #ffffff;              /* white text */
+  border: 1px solid #3a4a5a;   /* subtle dark border */
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #2c3b4d;   /* slightly lighter on hover */
+}
+    table {
+      border-collapse: collapse;
+      width: 100%;
+    }
+table td, table th {
+      border: 1px solid #3a4a5a;   /* dark border */
+      padding: 6px;
+    }
   </style>
 </head>
 <body>
-  <h2>Cross Dashboard</h2>
+  <h2>Trading Alert Dashboard</h2>
 
-  <!-- Timeframe Option for Dashboard 1 -->
-  <label for="timeframe1">Timeframe (Dashboard 1):</label>
-  <select id="timeframe1" onchange="saveSettings()">
-    <option value="1s">1s</option>
-    <option value="5s">5s</option>
-    <option value="30s">30s</option>
-    <option value="60s">60s</option>
-    <option value="180s">180s</option>
-    <option value="900s">900s</option>
-  </select>
-
-  <!-- Timeframe Option for Dashboard 2 -->
-  <label for="timeframe2">Timeframe (Dashboard 2):</label>
-  <select id="timeframe2" onchange="saveSettings()">
-    <option value="1s">1s</option>
-    <option value="5s">5s</option>
-    <option value="30s">30s</option>
-    <option value="60s">60s</option>
-    <option value="180s">180s</option>
-    <option value="900s">900s</option>
-  </select>
-
-  <!-- Symbol Editor for Dashboard 1 -->
-  <h3>Edit Symbols (Dashboard 1)</h3>
-  <textarea id="symbolsEditor1"></textarea>
-
-  <!-- Symbol Editor for Dashboard 2 -->
-  <h3>Edit Symbols (Dashboard 2)</h3>
-  <textarea id="symbolsEditor2"></textarea>
-
-  <!-- First Dashboard -->
-  <h3>Dashboard 1</h3>
   <table>
-    <tr><th>Symbol</th><th>Price</th><th>Signal</th><th>Time</th></tr>
-    <tbody id="rows1"></tbody>
+    <tr style="background:#132240; color:#8fa0c2;">
+      <th>Symbol</th>
+      <th>Indicator</th>
+      <th>Timeframe</th>
+      <th>Current Price</th>
+      <th>Alert</th>
+    </tr>
+    <script>
+      const symbols = [
+        "NILUSDT","TUTUSDT","STXUSDT","COOKIEUSDT","TSTUSDT","THEUSDT","XAIUSDT",
+        "BANANAS31USDT","COTIUSDT","BANDUSDT","ACEUSDT","STXUSDT","ADAUSDT",
+        "FFUSDT","DOGEUSDT","MATICUSDT"
+      ];
+      symbols.forEach((sym, i) => {
+        document.write(`
+          <tr>
+            <td><input type="text" id="sym${i}" value="${sym}" onchange="saveSettings(${i}); initRow(${i})"></td>
+            <td><select id="ind${i}" onchange="saveSettings(${i}); initRow(${i})">
+              <option>MACD</option>
+              <option>SMA Alerts</option>
+            </select></td>
+            <td><select id="tf${i}" onchange="saveSettings(${i}); initRow(${i})">
+              <option>1m</option><option>3m</option><option>5m</option><option>15m</option>
+            </select></td>
+            <td id="price${i}" style="color:#0ecb81;">Loading...</td>
+            <td><button onclick="sendTelegramAlert(${i}, 'Manual Alert')">Send Alert</button></td>
+          </tr>
+        `);
+      });
+    </script>
   </table>
 
-  <!-- Second Dashboard -->
-  <h3>Dashboard 2</h3>
-  <table>
-    <tr><th>Symbol</th><th>Price</th><th>Signal</th><th>Time</th></tr>
-    <tbody id="rows2"></tbody>
-  </table>
+  <div id="status" style="margin-top:20px; font-size:14px; color:#0ecb81;"></div>
 
-  <!-- Notifications -->
-  <h3>Notifications</h3>
-  <table>
-    <tr><th>Time</th><th>Symbol</th><th>Signal</th></tr>
-    <tbody id="notifications"></tbody>
-  </table>
-  <button onclick="clearNotifications()">Clear Notifications</button>
+  <script>
+    const BOT_TOKEN = "8910250156:AAFXETIQy7ILusg--h5FE1PKg-dLFgS7hpg"; 
+    const CHAT_ID = "7287275405";
 
-<script>
-// Load settings
-let symbols1 = JSON.parse(localStorage.getItem("symbols1")) || ["BTCUSDT","ETHUSDT","BNBUSDT","XRPUSDT"];
-let symbols2 = JSON.parse(localStorage.getItem("symbols2")) || ["ADAUSDT","SOLUSDT","DOGEUSDT","DOTUSDT"];
-document.getElementById("symbolsEditor1").value = symbols1.join(",");
-document.getElementById("symbolsEditor2").value = symbols2.join(",");
-
-let savedTF1 = localStorage.getItem("timeframe1") || "1s";
-let savedTF2 = localStorage.getItem("timeframe2") || "5s";
-document.getElementById("timeframe1").value = savedTF1;
-document.getElementById("timeframe2").value = savedTF2;
-
-function saveSettings() {
-  localStorage.setItem("timeframe1", document.getElementById("timeframe1").value);
-  localStorage.setItem("timeframe2", document.getElementById("timeframe2").value);
-}
-
-// Auto-save symbols when edited
-document.getElementById("symbolsEditor1").addEventListener("input", ()=>{
-  symbols1 = document.getElementById("symbolsEditor1").value.split(",").map(s=>s.trim()).filter(s=>s);
-  localStorage.setItem("symbols1", JSON.stringify(symbols1));
-});
-document.getElementById("symbolsEditor2").addEventListener("input", ()=>{
-  symbols2 = document.getElementById("symbolsEditor2").value.split(",").map(s=>s.trim()).filter(s=>s);
-  localStorage.setItem("symbols2", JSON.stringify(symbols2));
-});
-
-// State tracking
-let states1 = {}; let times1 = {};
-let states2 = {}; let times2 = {};
-
-function sma(values, len) {
-  return values.slice(-len).reduce((a,b)=>a+b,0)/len;
-}
-
-// === Cross Logic (30s vs 60s) ===
-function checkCross(symbol, closes, states, times) {
-  let ma30  = sma(closes, 30);
-  let ma60  = sma(closes, 60);
-
-  let prev = states[symbol] || "";
-  let signal = prev;
-
-  if(ma30 > ma60 && prev !== "Buy") {
-    signal = "Buy";
-    states[symbol] = "Buy";
-    times[symbol] = new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'numeric',second:'numeric',hour12:true});
-  }
-  else if(ma30 < ma60 && prev !== "Sell") {
-    signal = "Sell";
-    states[symbol] = "Sell";
-    times[symbol] = new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'numeric',second:'numeric',hour12:true});
-  }
-  return signal;
-}
-
-async function fetchData() {
-  let tf1 = document.getElementById("timeframe1").value;
-  let tf2 = document.getElementById("timeframe2").value;
-  let rowsHTML1 = "";
-  let rowsHTML2 = "";
-
-  for (let symbol of symbols1) {
-    let priceData = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${symbol}`);
-    let priceJson = await priceData.json();
-    let price = parseFloat(priceJson.price);
-
-    let klines1 = await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${tf1}&limit=200`);
-    let data1 = await klines1.json();
-    let closes1 = data1.map(c=>parseFloat(c[4]));
-    let signal1 = checkCross(symbol, closes1, states1, times1);
-    let time1 = times1[symbol] || "";
-
-    rowsHTML1 += `<tr>
-      <td>${symbol}</td>
-      <td>${price}</td>
-      <td class="${signal1.toLowerCase()}">${signal1}</td>
-      <td>${time1}</td>
-    </tr>`;
-
-    if(signal1 && !document.hasFocus()) {
-      let note = `<tr><td>${time1}</td><td>${symbol}</td><td class="${signal1.toLowerCase()}">${signal1}</td></tr>`;
-      addNotification(note);
+    function sendTelegramAlert(i, msg="Alert") {
+      let sym = document.getElementById(`sym${i}`).value;
+      let timeframe = document.getElementById(`tf${i}`).value;
+      let now = new Date();
+      let timeStr = now.toLocaleTimeString("en-IN", { hour12: false });
+      let fullMsg = `trade2 | ${msg}: ${sym} | TF: ${timeframe} | Candle Close: ${timeStr}`;
+      fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${CHAT_ID}&text=${encodeURIComponent(fullMsg)}`)
+        .then(res => res.json())
+        .then(data => { document.getElementById("status").innerText = "Message sent ✅"; })
+        .catch(err => { document.getElementById("status").innerText = "Error ❌"; });
     }
-  }
 
-  for (let symbol of symbols2) {
-    let priceData = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${symbol}`);
-    let priceJson = await priceData.json();
-    let price = parseFloat(priceJson.price);
+    async function fetchCandles(symbol, tf="1m") {
+      const res = await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${tf}&limit=1000`);
+      const data = await res.json();
+      return data.map(c => parseFloat(c[4]));
+    }
 
-    let klines2 = await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${tf2}&limit=200`);
-    let data2 = await klines2.json();
-    let closes2 = data2.map(c=>parseFloat(c[4]));
-    let signal2 = checkCross(symbol, closes2, states2, times2);
-    let time2 = times2[symbol] || "";
+    function EMA(values, period) {
+      let k = 2/(period+1), emaArray = [];
+      emaArray[0] = values[0];
+      for(let i=1;i<values.length;i++){
+        emaArray[i] = values[i]*k + emaArray[i-1]*(1-k);
+      }
+      return emaArray;
+    }
 
-    rowsHTML2 += `<tr>
-      <td>${symbol}</td>
-      <td>${price}</td>
-      <td class="${signal2.toLowerCase()}">${signal2}</td>
-      <td>${time2}</td>
-    </tr>`;
+    function SMA(values, period) {
+      let result = [];
+      for(let i=0;i<values.length;i++){
+        if(i<period) result.push(values[i]);
+        else {
+          let sum=0;
+          for(let j=i-period+1;j<=i;j++) sum+=values[j];
+          result.push(sum/period);
+        }
+      }
+      return result;
+    }
 
-    if(signal2 && !document.hasFocus()) {
-      let note = `<tr><td>${time2}</td><td>${symbol}</td><td class="${signal2.to
+    async function checkMACD(i, symbol, tf="1m") {
+      let closes = await fetchCandles(symbol, tf);
+      if(closes.length < 30) return;
+      let ema12 = EMA(closes, 12);
+      let ema26 = EMA(closes, 26);
+      let macdLine = ema12.map((v, idx) => v - ema26[idx]);
+      let signalLine = EMA(macdLine, 9);
+      let lastMacd = macdLine[macdLine.length-1], prevMacd = macdLine[macdLine.length-2];
+      let lastSignal = signalLine[signalLine.length-1], prevSignal = signalLine[signalLine.length-2];
+      if(prevMacd < prevSignal && lastMacd > lastSignal) sendTelegramAlert(i, "MACD Bullish Crossover");
+      else if(prevMacd > prevSignal && lastMacd < lastSignal) sendTelegramAlert(i, "MACD Bearish Crossover");
+    }
+
+    async function checkSMAAlerts(i, symbol, tf="1m") {
+  let closes = await fetchCandles(symbol, tf);
+  if(closes.length < 180) return;
+
+  let sma30  = SMA(closes, 30);  // Blue line
+  let sma60  = SMA(closes, 60);  // Orange line
+  let sma180 = SMA(closes, 180); // Purple line
+
+  let last30 = sma30[sma30.length-1], prev30 = sma30[sma30.length-2];
+  let last60 = sma60[sma60.length-1], prev60 = sma60[sma60.length-2];
+  let last180 = sma180[sma180.length-1], prev180 = sma180[sma180.length-2];
+
+  // 30 vs 60 crossover
+  if(prev30 < prev60 && last30 > last60) sendSignal(i, symbol, tf, "SMA Bullish Crossover (30 vs 60)");
+  else if(prev30 > prev60 && last30 < last60) sendSignal(i, symbol, tf, "SMA Bearish Crossover (30 vs 60)");
+
+  // 60 vs 180 crossover
+  if(prev60 < prev180 && last60 > last180) sendSignal(i, symbol, tf, "Long Bullish Trend (60 vs 180)");
+  else if(prev60 > prev180 && last60 < last180) sendSignal(i, symbol, tf, "Long Bearish Trend (60 vs 180)");
+}
+
+function sendSignal(i, symbol, tf, msg) {
+  let now = new Date();
+  let timeStr = now.toLocaleTimeString("en-IN", { hour: "numeric", minute: "numeric", second: "numeric", hour12: true });
+  let fullMsg = `${msg}: ${symbol} | TF: ${tf} | Time: ${timeStr}`;
+
+  // Telegram alert
+  sendTelegramAlert(i, msg);
+
+  // Save to localStorage for offline table
+  let notes = JSON.parse(localStorage.getItem("signals")||"[]");
+  notes.push(fullMsg);
+  localStorage.setItem("signals", JSON.stringify(notes));
+  renderSignals();
+}
+
+function renderSignals() {
+  let notes = JSON.parse(localStorage.getItem("signals")||"[]");
+  document.getElementById("signalsTable").innerHTML = notes.map(n=>"<tr><td>"+n+"</td></tr>").join("");
+}
+
+function clearSignals() {
+  localStorage.removeItem("signals");
+  renderSignals();
+}
+    async function fetchCrypto(i, symbol, tf="1m") {
+      try {
+        const res = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${symbol}`);
+        const data = await res.json();
+        if(data.price) {
+          document.getElementById(`price${i}`).innerText = `$ ${parseFloat(data.price).toLocaleString()}`;
+        }
+      } catch(e) {
+        document.getElementById(`price${i}`).innerText = "Error";
+      }
+    }
+
+    // LocalStorage save/load
+    function saveSettings(i) {
+      let sym = document.getElementById(`sym${i}`).value;
+      let ind = document.getElementById(`ind${i}`).value;
+      let tf  = document.getElementById(`tf${i}`).value;
+      localStorage.setItem(`row${i}`, JSON.stringify({sym, ind, tf}));
+    }
+
+    function loadSettings(i) {
+      let data = localStorage.getItem(`row${i}`);
+      if(data) {
+        let {sym, ind, tf} = JSON.parse(data);
+        document.getElementById(`sym${i}`).value = sym;
+        document.getElementById(`ind${i}`).value = ind;
+        document.getElementById(`tf${i}`).value  = tf;
+      }
+    }
+
+    let intervals = {};
+    function initRow(i) {
+      if(intervals[i]) clearInterval(intervals[i]);
+      let sym = document.getElementById(`sym${i}`).value.toUpperCase().trim();
+      let tf = document.getElementById(`tf${i}`).value;
+      let ind = document.getElementById(`ind${i}`).value;
+      intervals[i] = setInterval(() => {
+        fetchCrypto(i, sym, tf);
+        if(ind === "MACD") checkMACD(i, sym, tf);
+        else if(ind === "SMA Alerts") checkSMAAlerts(i, sym, tf);
+      }, 10000);
+    }
+
+    // Load saved settings on page load
+    window.onload = () => {
+      symbols.forEach((s, i) => {
+        loadSettings(i);
+        initRow(i);
+      });
+    };
+  </script>
+</body>
+</html>
