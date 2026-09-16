@@ -16,108 +16,174 @@
 <body>
   <h2>Cross Dashboard</h2>
 
-  <!-- Timeframe Option -->
-  <label for="timeframe">Timeframe:</label>
-  <select id="timeframe" onchange="saveSettings()">
+  <!-- Timeframe Option for Dashboard 1 -->
+  <label for="timeframe1">Timeframe (Dashboard 1):</label>
+  <select id="timeframe1" onchange="saveSettings()">
     <option value="1s">1s</option>
     <option value="5s">5s</option>
     <option value="30s">30s</option>
+    <option value="60s">60s</option>
     <option value="180s">180s</option>
     <option value="900s">900s</option>
   </select>
 
-  <!-- Symbol Editor -->
-  <h3>Edit Symbols</h3>
-  <textarea id="symbolsEditor"></textarea>
-  <button onclick="saveSymbols()">Save Symbols</button>
+  <!-- Timeframe Option for Dashboard 2 -->
+  <label for="timeframe2">Timeframe (Dashboard 2):</label>
+  <select id="timeframe2" onchange="saveSettings()">
+    <option value="1s">1s</option>
+    <option value="5s">5s</option>
+    <option value="30s">30s</option>
+    <option value="60s">60s</option>
+    <option value="180s">180s</option>
+    <option value="900s">900s</option>
+  </select>
 
+  <!-- Symbol Editor for Dashboard 1 -->
+  <h3>Edit Symbols (Dashboard 1)</h3>
+  <textarea id="symbolsEditor1"></textarea>
+  <button onclick="saveSymbols1()">Save Symbols 1</button>
+
+  <!-- Symbol Editor for Dashboard 2 -->
+  <h3>Edit Symbols (Dashboard 2)</h3>
+  <textarea id="symbolsEditor2"></textarea>
+  <button onclick="saveSymbols2()">Save Symbols 2</button>
+
+  <!-- First Dashboard -->
+  <h3>Dashboard 1</h3>
   <table>
     <tr><th>Symbol</th><th>Price</th><th>Signal</th><th>Time</th></tr>
-    <tbody id="rows"></tbody>
+    <tbody id="rows1"></tbody>
   </table>
 
+  <!-- Second Dashboard -->
+  <h3>Dashboard 2</h3>
+  <table>
+    <tr><th>Symbol</th><th>Price</th><th>Signal</th><th>Time</th></tr>
+    <tbody id="rows2"></tbody>
+  </table>
+
+  <!-- Notifications -->
   <h3>Notifications</h3>
-  <div id="notifications"></div>
+  <table>
+    <tr><th>Time</th><th>Symbol</th><th>Signal</th></tr>
+    <tbody id="notifications"></tbody>
+  </table>
   <button onclick="clearNotifications()">Clear Notifications</button>
 
 <script>
 // Load settings
-let symbols = JSON.parse(localStorage.getItem("symbols")) || ["BTCUSDT","ETHUSDT"];
-document.getElementById("symbolsEditor").value = symbols.join(",");
+let symbols1 = JSON.parse(localStorage.getItem("symbols1")) || ["BTCUSDT","ETHUSDT"];
+let symbols2 = JSON.parse(localStorage.getItem("symbols2")) || ["BNBUSDT","XRPUSDT"];
+document.getElementById("symbolsEditor1").value = symbols1.join(",");
+document.getElementById("symbolsEditor2").value = symbols2.join(",");
 
-let savedTF  = localStorage.getItem("timeframe") || "1s";
-document.getElementById("timeframe").value = savedTF;
+let savedTF1 = localStorage.getItem("timeframe1") || "1s";
+let savedTF2 = localStorage.getItem("timeframe2") || "5s";
+document.getElementById("timeframe1").value = savedTF1;
+document.getElementById("timeframe2").value = savedTF2;
 
 function saveSettings() {
-  localStorage.setItem("timeframe", document.getElementById("timeframe").value);
+  localStorage.setItem("timeframe1", document.getElementById("timeframe1").value);
+  localStorage.setItem("timeframe2", document.getElementById("timeframe2").value);
 }
 
-function saveSymbols() {
-  symbols = document.getElementById("symbolsEditor").value.split(",").map(s=>s.trim()).filter(s=>s);
-  localStorage.setItem("symbols", JSON.stringify(symbols));
+function saveSymbols1() {
+  symbols1 = document.getElementById("symbolsEditor1").value.split(",").map(s=>s.trim()).filter(s=>s);
+  localStorage.setItem("symbols1", JSON.stringify(symbols1));
+}
+
+function saveSymbols2() {
+  symbols2 = document.getElementById("symbolsEditor2").value.split(",").map(s=>s.trim()).filter(s=>s);
+  localStorage.setItem("symbols2", JSON.stringify(symbols2));
 }
 
 // State tracking
-let states = {}; // {symbol: "Buy"/"Sell"}
-let times  = {}; // {symbol: last signal time}
+let states1 = {}; let times1 = {};
+let states2 = {}; let times2 = {};
 
 function sma(values, len) {
   return values.slice(-len).reduce((a,b)=>a+b,0)/len;
 }
 
-function checkCross(symbol, closes) {
+// === Cross Logic (30s vs 60s) ===
+function checkCross(symbol, closes, states, times) {
   let ma30  = sma(closes, 30);
-  let ma180 = sma(closes, 180);
+  let ma60  = sma(closes, 60);
 
   let prev = states[symbol] || "";
   let signal = prev;
 
-  if(ma30 > ma180 && prev !== "Buy") {
+  if(ma30 > ma60 && prev !== "Buy") {
     signal = "Buy";
     states[symbol] = "Buy";
-    times[symbol] = new Date().toLocaleTimeString();
+    times[symbol] = new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'numeric',second:'numeric',hour12:true});
   }
-  else if(ma30 < ma180 && prev !== "Sell") {
+  else if(ma30 < ma60 && prev !== "Sell") {
     signal = "Sell";
     states[symbol] = "Sell";
-    times[symbol] = new Date().toLocaleTimeString();
+    times[symbol] = new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'numeric',second:'numeric',hour12:true});
   }
   return signal;
 }
 
 async function fetchData() {
-  let timeframe = document.getElementById("timeframe").value;
-  let rowsHTML = "";
+  let tf1 = document.getElementById("timeframe1").value;
+  let tf2 = document.getElementById("timeframe2").value;
+  let rowsHTML1 = "";
+  let rowsHTML2 = "";
 
-  for (let symbol of symbols) {
+  for (let symbol of symbols1) {
     let priceData = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${symbol}`);
     let priceJson = await priceData.json();
     let price = parseFloat(priceJson.price);
 
-    let klines = await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${timeframe}&limit=200`);
-    let data = await klines.json();
-    let closes = data.map(c=>parseFloat(c[4]));
+    let klines1 = await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${tf1}&limit=200`);
+    let data1 = await klines1.json();
+    let closes1 = data1.map(c=>parseFloat(c[4]));
+    let signal1 = checkCross(symbol, closes1, states1, times1);
+    let time1 = times1[symbol] || "";
 
-    let signal = checkCross(symbol, closes);
-    let time = times[symbol] || "";
-
-    rowsHTML += `<tr>
+    rowsHTML1 += `<tr>
       <td>${symbol}</td>
       <td>${price}</td>
-      <td class="${signal.toLowerCase()}">${signal}</td>
-      <td>${time}</td>
+      <td class="${signal1.toLowerCase()}">${signal1}</td>
+      <td>${time1}</td>
     </tr>`;
 
-    if(signal && !document.hasFocus()) {
-      let note = `${time} - ${symbol} - ${signal}`;
+    if(signal1 && !document.hasFocus()) {
+      let note = `<tr><td>${time1}</td><td>${symbol}</td><td class="${signal1.toLowerCase()}">${signal1}</td></tr>`;
       addNotification(note);
     }
   }
 
-  document.getElementById("rows").innerHTML = rowsHTML;
-}
+  for (let symbol of symbols2) {
+    let priceData = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${symbol}`);
+    let priceJson = await priceData.json();
+    let price = parseFloat(priceJson.price);
 
-function addNotification(note) {
+    let klines2 = await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${tf2}&limit=200`);
+    let data2 = await klines2.json();
+    let closes2 = data2.map(c=>parseFloat(c[4]));
+    let signal2 = checkCross(symbol, closes2, states2, times2);
+    let time2 = times2[symbol] || "";
+
+    rowsHTML2 += `<tr>
+      <td>${symbol}</td>
+      <td>${price}</td>
+      <td class="${signal2.toLowerCase()}">${signal2}</td>
+      <td>${time2}</td>
+    </tr>`;
+
+    if(signal2 && !document.hasFocus()) {
+      let note = `<tr><td>${time2}</td><td>${symbol}</td><td class="${signal2.toLowerCase()}">${signal2}</td></tr>`;
+      addNotification(note);
+    }
+  }
+
+  document.getElementById("rows1").innerHTML = rowsHTML1;
+  document.getElementById("rows2").innerHTML = rowsHTML2;
+
+  function addNotification(note) {
   let notes = JSON.parse(localStorage.getItem("notes")||"[]");
   notes.push(note);
   localStorage.setItem("notes", JSON.stringify(notes));
