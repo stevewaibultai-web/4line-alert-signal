@@ -75,7 +75,15 @@ table td, table th {
   </table>
 
   <div id="status" style="margin-top:20px; font-size:14px; color:#0ecb81;"></div>
-
+  <h3>Saved Signals</h3>
+  <table style="width:100%; border:1px solid #3a4a5a; margin-top:20px;">
+    <tr style="background:#132240; color:#8fa0c2;">
+    <th>Signal History</th>
+  </tr>
+  <tbody id="signalsTable"></tbody>
+</table>
+<button onclick="clearSignals()">Clear Saved Signals</button>
+  
   <script>
     const BOT_TOKEN = "8910250156:AAFXETIQy7ILusg--h5FE1PKg-dLFgS7hpg"; 
     const CHAT_ID = "7287275405";
