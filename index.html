@@ -16,13 +16,23 @@
 <body>
   <h2>Cross Dashboard</h2>
 
+  <!-- Timeframe Option -->
+  <label for="timeframe">Timeframe:</label>
+  <select id="timeframe" onchange="saveSettings()">
+    <option value="1s">1s</option>
+    <option value="5s">5s</option>
+    <option value="30s">30s</option>
+    <option value="180s">180s</option>
+    <option value="900s">900s</option>
+  </select>
+
   <!-- Symbol Editor -->
   <h3>Edit Symbols</h3>
   <textarea id="symbolsEditor"></textarea>
   <button onclick="saveSymbols()">Save Symbols</button>
 
   <table>
-    <tr><th>Symbol</th><th>Price</th><th>Signal</th></tr>
+    <tr><th>Symbol</th><th>Price</th><th>Signal</th><th>Time</th></tr>
     <tbody id="rows"></tbody>
   </table>
 
@@ -31,39 +41,32 @@
   <button onclick="clearNotifications()">Clear Notifications</button>
 
 <script>
-// Load settings from localStorage
-let symbols = JSON.parse(localStorage.getItem("symbols")) || [
-  "BTCUSDT","ETHUSDT","BNBUSDT","XRPUSDT",
-  "ADAUSDT","SOLUSDT","DOGEUSDT","DOTUSDT",
-  "MATICUSDT","LTCUSDT","TRXUSDT","SHIBUSDT",
-  "AVAXUSDT","ATOMUSDT","NEARUSDT","FILUSDT"
-];
+// Load settings
+let symbols = JSON.parse(localStorage.getItem("symbols")) || ["BTCUSDT","ETHUSDT"];
 document.getElementById("symbolsEditor").value = symbols.join(",");
+
+let savedTF  = localStorage.getItem("timeframe") || "1s";
+document.getElementById("timeframe").value = savedTF;
+
+function saveSettings() {
+  localStorage.setItem("timeframe", document.getElementById("timeframe").value);
+}
 
 function saveSymbols() {
   symbols = document.getElementById("symbolsEditor").value.split(",").map(s=>s.trim()).filter(s=>s);
   localStorage.setItem("symbols", JSON.stringify(symbols));
 }
 
-// State tracking for each symbol
+// State tracking
 let states = {}; // {symbol: "above"/"below"}
 
-// Simple SMA function
 function sma(values, len) {
   return values.slice(-len).reduce((a,b)=>a+b,0)/len;
 }
 
-// Dummy price history generator (replace with real candles if needed)
-function generateHistory(price) {
-  let arr = [];
-  for(let i=0;i<200;i++) arr.push(price + (Math.random()-0.5));
-  return arr;
-}
-
-// Cross check logic (30s vs 180s)
-function checkCross(symbol, priceHistory) {
-  let ma30 = sma(priceHistory, 30);
-  let ma180 = sma(priceHistory, 180);
+function checkCross(symbol, closes) {
+  let ma30  = sma(closes, 30);
+  let ma180 = sma(closes, 180);
 
   let prev = states[symbol] || "";
   let signal = "";
@@ -79,20 +82,8 @@ function checkCross(symbol, priceHistory) {
   return signal;
 }
 
-// Telegram notification
-async function sendTelegram(message) {
-  let token = "<YOUR_BOT_TOKEN>";
-  let chatId = "<YOUR_CHAT_ID>";
-  let url = `https://api.telegram.org/bot${token}/sendMessage`;
-  await fetch(url, {
-    method: "POST",
-    headers: {"Content-Type":"application/json"},
-    body: JSON.stringify({chat_id: chatId, text: message})
-  });
-}
-
-// Fetch data for all symbols
 async function fetchData() {
+  let timeframe = document.getElementById("timeframe").value;
   let rowsHTML = "";
 
   for (let symbol of symbols) {
@@ -100,20 +91,23 @@ async function fetchData() {
     let priceJson = await priceData.json();
     let price = parseFloat(priceJson.price);
 
-    let history = generateHistory(price);
-    let signal = checkCross(symbol, history);
+    let klines = await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${timeframe}&limit=200`);
+    let data = await klines.json();
+    let closes = data.map(c=>parseFloat(c[4]));
+
+    let signal = checkCross(symbol, closes);
+    let time = new Date().toLocaleTimeString();
 
     rowsHTML += `<tr>
       <td>${symbol}</td>
       <td>${price}</td>
       <td class="${signal.toLowerCase()}">${signal}</td>
+      <td>${time}</td>
     </tr>`;
 
     if(signal && !document.hasFocus()) {
-      let time = new Date().toLocaleTimeString();
       let note = `${time} - ${symbol} - ${signal}`;
       addNotification(note);
-      sendTelegram(note);
     }
   }
 
