@@ -10,7 +10,6 @@
     .buy { color:lime; }
     .sell { color:red; }
     textarea { width:100%; height:80px; background:#222; color:#eee; }
-    button { margin-top:10px; }
   </style>
 </head>
 <body>
@@ -41,12 +40,10 @@
   <!-- Symbol Editor for Dashboard 1 -->
   <h3>Edit Symbols (Dashboard 1)</h3>
   <textarea id="symbolsEditor1"></textarea>
-  <button onclick="saveSymbols1()">Save Symbols 1</button>
 
   <!-- Symbol Editor for Dashboard 2 -->
   <h3>Edit Symbols (Dashboard 2)</h3>
   <textarea id="symbolsEditor2"></textarea>
-  <button onclick="saveSymbols2()">Save Symbols 2</button>
 
   <!-- First Dashboard -->
   <h3>Dashboard 1</h3>
@@ -72,8 +69,8 @@
 
 <script>
 // Load settings
-let symbols1 = JSON.parse(localStorage.getItem("symbols1")) || ["BTCUSDT","ETHUSDT"];
-let symbols2 = JSON.parse(localStorage.getItem("symbols2")) || ["BNBUSDT","XRPUSDT"];
+let symbols1 = JSON.parse(localStorage.getItem("symbols1")) || ["BTCUSDT","ETHUSDT","BNBUSDT","XRPUSDT"];
+let symbols2 = JSON.parse(localStorage.getItem("symbols2")) || ["ADAUSDT","SOLUSDT","DOGEUSDT","DOTUSDT"];
 document.getElementById("symbolsEditor1").value = symbols1.join(",");
 document.getElementById("symbolsEditor2").value = symbols2.join(",");
 
@@ -87,15 +84,15 @@ function saveSettings() {
   localStorage.setItem("timeframe2", document.getElementById("timeframe2").value);
 }
 
-function saveSymbols1() {
+// Auto-save symbols when edited
+document.getElementById("symbolsEditor1").addEventListener("input", ()=>{
   symbols1 = document.getElementById("symbolsEditor1").value.split(",").map(s=>s.trim()).filter(s=>s);
   localStorage.setItem("symbols1", JSON.stringify(symbols1));
-}
-
-function saveSymbols2() {
+});
+document.getElementById("symbolsEditor2").addEventListener("input", ()=>{
   symbols2 = document.getElementById("symbolsEditor2").value.split(",").map(s=>s.trim()).filter(s=>s);
   localStorage.setItem("symbols2", JSON.stringify(symbols2));
-}
+});
 
 // State tracking
 let states1 = {}; let times1 = {};
@@ -175,33 +172,4 @@ async function fetchData() {
     </tr>`;
 
     if(signal2 && !document.hasFocus()) {
-      let note = `<tr><td>${time2}</td><td>${symbol}</td><td class="${signal2.toLowerCase()}">${signal2}</td></tr>`;
-      addNotification(note);
-    }
-  }
-
-  document.getElementById("rows1").innerHTML = rowsHTML1;
-  document.getElementById("rows2").innerHTML = rowsHTML2;
-
-  function addNotification(note) {
-  let notes = JSON.parse(localStorage.getItem("notes")||"[]");
-  notes.push(note);
-  localStorage.setItem("notes", JSON.stringify(notes));
-  renderNotifications();
-}
-
-function renderNotifications() {
-  let notes = JSON.parse(localStorage.getItem("notes")||"[]");
-  document.getElementById("notifications").innerHTML = notes.map(n=>"<p>"+n+"</p>").join("");
-}
-
-function clearNotifications() {
-  localStorage.removeItem("notes");
-  renderNotifications();
-}
-
-renderNotifications();
-setInterval(fetchData, 5000);
-</script>
-</body>
-</html>
+      let note = `<tr><td>${time2}</td><td>${symbol}</td><td class="${signal2.to
