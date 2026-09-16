@@ -58,7 +58,8 @@ function saveSymbols() {
 }
 
 // State tracking
-let states = {}; // {symbol: "above"/"below"}
+let states = {}; // {symbol: "Buy"/"Sell"}
+let times  = {}; // {symbol: last signal time}
 
 function sma(values, len) {
   return values.slice(-len).reduce((a,b)=>a+b,0)/len;
@@ -69,15 +70,17 @@ function checkCross(symbol, closes) {
   let ma180 = sma(closes, 180);
 
   let prev = states[symbol] || "";
-  let signal = "";
+  let signal = prev;
 
-  if(ma30 > ma180 && prev !== "above") {
+  if(ma30 > ma180 && prev !== "Buy") {
     signal = "Buy";
-    states[symbol] = "above";
+    states[symbol] = "Buy";
+    times[symbol] = new Date().toLocaleTimeString();
   }
-  if(ma30 < ma180 && prev !== "below") {
+  else if(ma30 < ma180 && prev !== "Sell") {
     signal = "Sell";
-    states[symbol] = "below";
+    states[symbol] = "Sell";
+    times[symbol] = new Date().toLocaleTimeString();
   }
   return signal;
 }
@@ -96,7 +99,7 @@ async function fetchData() {
     let closes = data.map(c=>parseFloat(c[4]));
 
     let signal = checkCross(symbol, closes);
-    let time = new Date().toLocaleTimeString();
+    let time = times[symbol] || "";
 
     rowsHTML += `<tr>
       <td>${symbol}</td>
