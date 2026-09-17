@@ -1,3 +1,22 @@
-<script type="module" src="https://widgets.tradingview-widget.com/w/en/tv-mini-chart.js"></script>
+<!-- Load TradingView Script once -->
+<script type="module" src="https://tradingview-widget.com"></script>
 
-<tv-mini-chart symbol="NASDAQ:AAPL"></tv-mini-chart>
+<!-- Dashboard Container Layout -->
+<div style="display: flex; gap: 15px; justify-content: space-between; flex-wrap: wrap; padding: 15px; background-color: #0d1117; border-radius: 6px;">
+  
+  <!-- Chart 1: Apple -->
+  <div style="flex: 1; min-width: 250px; background: #161b22; padding: 10px; border-radius: 6px; border: 1px solid #30363d;">
+    <tv-mini-chart symbol="NASDAQ:AAPL" theme="dark" width="100%"></tv-mini-chart>
+  </div>
+
+  <!-- Chart 2: Microsoft -->
+  <div style="flex: 1; min-width: 250px; background: #161b22; padding: 10px; border-radius: 6px; border: 1px solid #30363d;">
+    <tv-mini-chart symbol="NASDAQ:MSFT" theme="dark" width="100%"></tv-mini-chart>
+  </div>
+
+  <!-- Chart 3: Google -->
+  <div style="flex: 1; min-width: 250px; background: #161b22; padding: 10px; border-radius: 6px; border: 1px solid #30363d;">
+    <tv-mini-chart symbol="NASDAQ:GOOGL" theme="dark" width="100%"></tv-mini-chart>
+  </div>
+
+</div>
