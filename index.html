@@ -1,20 +1,56 @@
-<!-- GitHub Dashboard Container -->
-<div align="center" style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Crypto & Stock Dashboard</title>
+    <!-- Load the script in the head -->
+    <script type="module" src="https://tradingview-widget.com"></script>
+    <style>
+        body {
+            background-color: #0d1117;
+            margin: 0;
+            padding: 20px;
+            font-family: sans-serif;
+        }
+        .dashboard-container {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .chart-box {
+            flex: 1;
+            min-width: 300px;
+            max-width: 400px;
+            height: 220px;
+            background: #161b22;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #30363d;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+<body>
 
-  <!-- Chart 1: Apple (AAPL) -->
-  <iframe src="https://tradingview.com" 
-          width="32%" height="250" frameborder="0" allowtransparency="true" scrolling="no" style="min-width: 250px; border-radius: 8px;">
-  </iframe>
+    <div class="dashboard-container">
+        
+        <!-- Chart 1: Apple -->
+        <div class="chart-box">
+            <tv-mini-chart symbol="NASDAQ:AAPL" theme="dark" width="100%" height="100%"></tv-mini-chart>
+        </div>
 
-  <!-- Chart 2: Microsoft (MSFT) -->
-  <iframe src="https://tradingview.com" 
-          width="32%" height="250" frameborder="0" allowtransparency="true" scrolling="no" style="min-width: 250px; border-radius: 8px;">
-  </iframe>
+        <!-- Chart 2: Microsoft -->
+        <div class="chart-box">
+            <tv-mini-chart symbol="NASDAQ:MSFT" theme="dark" width="100%" height="100%"></tv-mini-chart>
+        </div>
 
-  <!-- Chart 3: Google (GOOGL) -->
-  <iframe src="https://tradingview.com" 
-          width="32%" height="250" frameborder="0" allowtransparency="true" scrolling="no" style="min-width: 250px; border-radius: 8px;">
-  </iframe>
+        <!-- Chart 3: Google -->
+        <div class="chart-box">
+            <tv-mini-chart symbol="NASDAQ:GOOGL" theme="dark" width="100%" height="100%"></tv-mini-chart>
+        </div>
 
-</div>
+    </div>
 
+</body>
+</html>
