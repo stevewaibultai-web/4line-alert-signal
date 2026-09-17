@@ -1,96 +1,33 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Crypto Multi-Chart Dashboard</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #0c0d14;
-            margin: 0;
-            padding: 10px;
-        }
-        .dashboard-grid {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-        .chart-container {
-            background-color: #131722;
-            border-radius: 8px;
-            padding: 5px;
-            height: 480px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-        }
-        @media (min-width: 992px) {
-            .dashboard-grid {
-                flex-direction: row;
-            }
-            .chart-container {
-                flex: 1;
-            }
-        }
-    </style>
-</head>
-<body>
-
-    <div class="dashboard-grid">
-        
-        <!-- Chart 1 -->
-        <div class="chart-container">
-            <div id="chart_one" style="height:100%;width:100%"></div>
-        </div>
-
-        <!-- Chart 2 -->
-        <div class="chart-container">
-            <div id="chart_two" style="height:100%;width:100%"></div>
-        </div>
-
-        <!-- Chart 3 -->
-        <div class="chart-container">
-            <div id="chart_three" style="height:100%;width:100%"></div>
-        </div>
-
-    </div>
-
-    <script type="text/javascript" src="https://tradingview.com"></script>
-    
-    <script type="text/javascript">
-        const commonSettings = {
-            "autosize": true,
-            "symbol": "BINANCE:BTCUSDT",
-            "timezone": "Etc/UTC",
-            "theme": "dark",
-            "style": "1",
-            "locale": "en",
-            "enable_publishing": false,
-            "hide_side_toolbar": false,
-            "allow_symbol_change": true,
-            "withdate": true
-        };
-
-        new TradingView.widget({
-            ...commonSettings,
-            "interval": "5",
-            "studies": ["RSI@tv-basicstudies"],
-            "container_id": "chart_one"
-        });
-
-        new TradingView.widget({
-            ...commonSettings,
-            "interval": "60",
-            "studies": ["MASimple@tv-basicstudies"],
-            "container_id": "chart_two"
-        });
-
-        new TradingView.widget({
-            ...commonSettings,
-            "interval": "D",
-            "studies": ["MACD@tv-basicstudies"],
-            "container_id": "chart_three"
-        });
-    </script>
-
-</body>
-</html>
+<!-- TradingView Widget BEGIN -->
+<div class="tradingview-widget-container" style="height:100%;width:100%">
+  <div class="tradingview-widget-container__widget" style="height:calc(100% - 32px);width:100%"></div>
+  <div class="tradingview-widget-copyright"><a href="https://www.tradingview.com/symbols/NASDAQ-AAPL/" rel="noopener nofollow" target="_blank"><span class="blue-text">AAPL stock chart</span></a><span class="trademark"> by TradingView</span></div>
+  <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
+  {
+  "allow_symbol_change": true,
+  "calendar": false,
+  "details": false,
+  "hide_side_toolbar": true,
+  "hide_top_toolbar": false,
+  "hide_legend": false,
+  "hide_volume": false,
+  "hotlist": false,
+  "interval": "D",
+  "locale": "en",
+  "save_image": true,
+  "style": "1",
+  "symbol": "NASDAQ:AAPL",
+  "theme": "dark",
+  "timezone": "Etc/UTC",
+  "backgroundColor": "#0F0F0F",
+  "gridColor": "rgba(242, 242, 242, 0.2)",
+  "watchlist": [],
+  "withdateranges": false,
+  "compareSymbols": [],
+  "support_host": "https://www.tradingview.com",
+  "studies": [],
+  "autosize": true
+}
+  </script>
+</div>
+<!-- TradingView Widget END -->
