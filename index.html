@@ -1,33 +1,63 @@
-<!-- TradingView Widget BEGIN -->
-<div class="tradingview-widget-container" style="height:100%;width:100%">
-  <div class="tradingview-widget-container__widget" style="height:calc(100% - 32px);width:100%"></div>
-  <div class="tradingview-widget-copyright"><a href="https://www.tradingview.com/symbols/NASDAQ-AAPL/" rel="noopener nofollow" target="_blank"><span class="blue-text">AAPL stock chart</span></a><span class="trademark"> by TradingView</span></div>
-  <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
-  {
-  "allow_symbol_change": true,
-  "calendar": false,
-  "details": false,
-  "hide_side_toolbar": true,
-  "hide_top_toolbar": false,
-  "hide_legend": false,
-  "hide_volume": false,
-  "hotlist": false,
-  "interval": "D",
-  "locale": "en",
-  "save_image": true,
-  "style": "1",
-  "symbol": "NASDAQ:AAPL",
-  "theme": "dark",
-  "timezone": "Etc/UTC",
-  "backgroundColor": "#0F0F0F",
-  "gridColor": "rgba(242, 242, 242, 0.2)",
-  "watchlist": [],
-  "withdateranges": false,
-  "compareSymbols": [],
-  "support_host": "https://www.tradingview.com",
-  "studies": [],
-  "autosize": true
-}
-  </script>
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Practice Trading Dashboard</title>
+  <script type="module" src="https://widgets.tradingview-widget.com/w/en/tv-mini-chart.js"></script>
+  <style>
+    body { font-family: Arial; background:#f4f4f4; }
+    #dashboard { width:100%; max-width:600px; margin:auto; }
+    #chart { margin-bottom:20px; }
+    #panel { background:#fff; padding:15px; border-radius:8px; }
+    .row { margin:10px 0; }
+  </style>
+</head>
+<body>
+<div id="dashboard">
+  <!-- Chart -->
+  <div id="chart">
+    <tv-mini-chart symbol="NASDAQ:AAPL"></tv-mini-chart>
+  </div>
+
+  <!-- Practice Trading Panel -->
+  <div id="panel">
+    <div class="row">
+      Amount: <input id="amount" type="number" value="100">
+    </div>
+    <div class="row">
+      Stop Loss: <input id="stop" type="number" value="330">
+    </div>
+    <div class="row">
+      <button onclick="buy()">Buy</button>
+      <button onclick="sell()">Sell</button>
+    </div>
+    <div class="row" id="status">No trade yet</div>
+  </div>
 </div>
-<!-- TradingView Widget END -->
+
+<script>
+let inTrade=false, entry=0, stop=0, isLong=false, amount=0;
+
+function buy(){
+  if(!inTrade){
+    entry=337; // demo: current price
+    stop=parseFloat(document.getElementById('stop').value);
+    amount=parseFloat(document.getElementById('amount').value);
+    inTrade=true; isLong=true;
+    updateStatus("Buy at "+entry+" Stop "+stop+" Amount "+amount);
+  }
+}
+function sell(){
+  if(!inTrade){
+    entry=337;
+    stop=parseFloat(document.getElementById('stop').value);
+    amount=parseFloat(document.getElementById('amount').value);
+    inTrade=true; isLong=false;
+    updateStatus("Sell at "+entry+" Stop "+stop+" Amount "+amount);
+  }
+}
+function updateStatus(msg){
+  document.getElementById('status').innerText=msg;
+}
+</script>
+</body>
+</html>
