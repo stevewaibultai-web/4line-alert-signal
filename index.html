@@ -10,9 +10,11 @@
     .row { margin:8px 0; }
     button { padding:8px 12px; margin-right:10px; }
     input { width:100px; }
-    .marker { position:absolute; width:10px; height:10px; border-radius:50%; }
+    .marker { position:absolute; width:12px; height:12px; border-radius:50%; }
     .buy { background:lime; }
     .sell { background:red; }
+    .stop { background:yellow; }
+    .label { position:absolute; color:#fff; font-size:12px; }
   </style>
 </head>
 <body>
@@ -79,6 +81,25 @@
 let inTrade=false, entry=0, stop=0, isLong=false, amount=0;
 let currentPrice=0;
 
+// Load saved state on refresh
+window.onload = () => {
+  let saved = JSON.parse(localStorage.getItem("tradeState"));
+  if(saved){
+    inTrade = saved.inTrade;
+    entry = saved.entry;
+    stop = saved.stop;
+    isLong = saved.isLong;
+    amount = saved.amount;
+    document.getElementById('status').innerText = saved.status;
+  }
+};
+
+// Save state
+function saveState(status){
+  let state = {inTrade, entry, stop, isLong, amount, status};
+  localStorage.setItem("tradeState", JSON.stringify(state));
+}
+
 // Live price API
 async function fetchPrice(){
   try {
@@ -90,12 +111,18 @@ async function fetchPrice(){
   }
 }
 
-function placeMarker(type){
+function placeMarker(type, text){
   let marker = document.createElement("div");
   marker.className = "marker "+type;
-  marker.style.left = "50%"; // demo position
-  marker.style.top = "50%";
+  marker.style.left = "50%";
+  marker.style.top = type==="stop" ? "70%" : "50%";
+  let label = document.createElement("div");
+  label.className="label";
+  label.style.left="55%";
+  label.style.top=type==="stop" ? "70%" : "50%";
+  label.innerText=text;
   document.getElementById("markerLayer").appendChild(marker);
+  document.getElementById("markerLayer").appendChild(label);
 }
 
 function buy(){
@@ -104,8 +131,11 @@ function buy(){
     stop=parseFloat(document.getElementById('stop').value);
     amount=parseFloat(document.getElementById('amount').value);
     inTrade=true; isLong=true;
-    placeMarker("buy");
-    updateStatus("BUY at "+entry+" | Stop "+stop+" | Amount "+amount+" | PnL: 0");
+    placeMarker("buy","BUY "+entry);
+    placeMarker("stop","STOP "+stop);
+    let status="BUY at "+entry+" | Stop "+stop+" | Amount "+amount+" | PnL: 0";
+    updateStatus(status);
+    saveState(status);
   }
 }
 function sell(){
@@ -114,15 +144,20 @@ function sell(){
     stop=parseFloat(document.getElementById('stop').value);
     amount=parseFloat(document.getElementById('amount').value);
     inTrade=true; isLong=false;
-    placeMarker("sell");
-    updateStatus("SELL at "+entry+" | Stop "+stop+" | Amount "+amount+" | PnL: 0");
+    placeMarker("sell","SELL "+entry);
+    placeMarker("stop","STOP "+stop);
+    let status="SELL at "+entry+" | Stop "+stop+" | Amount "+amount+" | PnL: 0";
+    updateStatus(status);
+    saveState(status);
   }
 }
 function cancelTrade(){
   if(inTrade){
     inTrade=false; entry=0; stop=0; amount=0; isLong=false;
     document.getElementById("markerLayer").innerHTML="";
-    updateStatus("Trade cancelled");
+    let status="Trade cancelled";
+    updateStatus(status);
+    saveState(status);
   }
 }
 function updateStatus(msg){
@@ -135,7 +170,8 @@ setInterval(async ()=>{
   if(inTrade && currentPrice>0){
     let pnl = isLong ? (currentPrice - entry) * amount : (entry - currentPrice) * amount;
     let status = (isLong ? "BUY" : "SELL")+" at "+entry+" | Stop "+stop+" | Amount "+amount+" | PnL: "+pnl.toFixed(2);
-    document.getElementById('status').innerText=status;
+    updateStatus(status);
+    saveState(status);
     if(isLong && currentPrice <= stop){ cancelTrade(); }
     if(!isLong && currentPrice >= stop){ cancelTrade(); }
   }
