@@ -1,22 +1,38 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Mini Chart + Practice Trading</title>
-  <script type="module" src="https://widgets.tradingview-widget.com/w/en/tv-mini-chart.js"></script>
+  <title>Trading Dashboard</title>
   <style>
-    body { font-family: Arial; background:#f4f4f4; }
-    #dashboard { width:100%; max-width:600px; margin:auto; }
-    #chart { margin-bottom:20px; }
-    #panel { background:#fff; padding:15px; border-radius:8px; }
+    body { font-family: Arial; background:#0F0F0F; color:#fff; }
+    #dashboard { width:100%; max-width:900px; margin:auto; }
+    #panel { background:#1a1a1a; padding:15px; border-radius:8px; margin-top:20px; }
     .row { margin:10px 0; }
+    button { padding:8px 12px; margin-right:10px; }
   </style>
 </head>
 <body>
 <div id="dashboard">
-  <!-- Chart (তোমার দেওয়া স্ক্রিপ্ট 그대로) -->
-  <div id="chart">
-    <tv-mini-chart symbol="NASDAQ:AAPL"></tv-mini-chart>
+  <!-- TradingView Chart (unchanged) -->
+  <!-- TradingView Widget BEGIN -->
+  <div class="tradingview-widget-container" style="height:500px;width:100%">
+    <div class="tradingview-widget-container__widget" style="height:100%;width:100%"></div>
+    <div class="tradingview-widget-copyright">
+      <a href="https://www.tradingview.com/symbols/NASDAQ-AAPL/" target="_blank">
+        <span class="blue-text">AAPL stock chart</span>
+      </a><span class="trademark"> by TradingView</span>
+    </div>
+    <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
+    {
+      "symbol": "NASDAQ:AAPL",
+      "interval": "D",
+      "theme": "dark",
+      "autosize": true,
+      "backgroundColor": "#0F0F0F",
+      "gridColor": "rgba(242, 242, 242, 0.2)"
+    }
+    </script>
   </div>
+  <!-- TradingView Widget END -->
 
   <!-- Practice Trading Panel -->
   <div id="panel">
@@ -39,20 +55,20 @@ let inTrade=false, entry=0, stop=0, isLong=false, amount=0;
 
 function buy(){
   if(!inTrade){
-    entry=337; // demo: current price
+    entry=337; // demo current price
     stop=parseFloat(document.getElementById('stop').value);
     amount=parseFloat(document.getElementById('amount').value);
     inTrade=true; isLong=true;
-    updateStatus("Buy at "+entry+" Stop "+stop+" Amount "+amount);
+    updateStatus("BUY at "+entry+" | Stop "+stop+" | Amount "+amount);
   }
 }
 function sell(){
   if(!inTrade){
-    entry=337;
+    entry=337; // demo current price
     stop=parseFloat(document.getElementById('stop').value);
     amount=parseFloat(document.getElementById('amount').value);
     inTrade=true; isLong=false;
-    updateStatus("Sell at "+entry+" Stop "+stop+" Amount "+amount);
+    updateStatus("SELL at "+entry+" | Stop "+stop+" | Amount "+amount);
   }
 }
 function updateStatus(msg){
