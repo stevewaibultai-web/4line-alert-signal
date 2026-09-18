@@ -1,33 +1,130 @@
-<!-- TradingView Widget BEGIN -->
-<div class="tradingview-widget-container" style="height:100%;width:100%">
-  <div class="tradingview-widget-container__widget" style="height:calc(100% - 32px);width:100%"></div>
-  <div class="tradingview-widget-copyright"><a href="https://www.tradingview.com/symbols/NASDAQ-AAPL/" rel="noopener nofollow" target="_blank"><span class="blue-text">AAPL stock chart</span></a><span class="trademark"> by TradingView</span></div>
-  <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
-  {
-  "allow_symbol_change": true,
-  "calendar": false,
-  "details": false,
-  "hide_side_toolbar": true,
-  "hide_top_toolbar": false,
-  "hide_legend": false,
-  "hide_volume": false,
-  "hotlist": false,
-  "interval": "D",
-  "locale": "en",
-  "save_image": true,
-  "style": "1",
-  "symbol": "NASDAQ:AAPL",
-  "theme": "dark",
-  "timezone": "Etc/UTC",
-  "backgroundColor": "#0F0F0F",
-  "gridColor": "rgba(242, 242, 242, 0.2)",
-  "watchlist": [],
-  "withdateranges": false,
-  "compareSymbols": [],
-  "support_host": "https://www.tradingview.com",
-  "studies": [],
-  "autosize": true
-}
-  </script>
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Trading Dashboard</title>
+  <style>
+    body { font-family: Arial; background:#0F0F0F; color:#fff; margin:0; padding:0; }
+    #dashboard { width:100%; height:100vh; display:flex; flex-direction:column; }
+    #chart { flex:3; }
+    #panel { flex:1; background:#1a1a1a; padding:15px; border-top:2px solid #333; }
+    .row { margin:8px 0; }
+    button { padding:8px 12px; margin-right:10px; }
+    input { width:100px; }
+  </style>
+</head>
+<body>
+<div id="dashboard">
+  <!-- তোমার TradingView স্ক্রিপ্ট অপরিবর্তিত -->
+  <!-- TradingView Widget BEGIN -->
+  <div class="tradingview-widget-container" style="height:100%;width:100%">
+    <div class="tradingview-widget-container__widget" style="height:calc(100% - 32px);width:100%"></div>
+    <div class="tradingview-widget-copyright">
+      <a href="https://www.tradingview.com/symbols/NASDAQ-AAPL/" target="_blank">
+        <span class="blue-text">AAPL stock chart</span>
+      </a><span class="trademark"> by TradingView</span>
+    </div>
+    <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
+    {
+      "allow_symbol_change": true,
+      "calendar": false,
+      "details": false,
+      "hide_side_toolbar": true,
+      "hide_top_toolbar": false,
+      "hide_legend": false,
+      "hide_volume": false,
+      "hotlist": false,
+      "interval": "D",
+      "locale": "en",
+      "save_image": true,
+      "style": "1",
+      "symbol": "NASDAQ:AAPL",
+      "theme": "dark",
+      "timezone": "Etc/UTC",
+      "backgroundColor": "#0F0F0F",
+      "gridColor": "rgba(242, 242, 242, 0.2)",
+      "watchlist": [],
+      "withdateranges": false,
+      "compareSymbols": [],
+      "support_host": "https://www.tradingview.com",
+      "studies": [],
+      "autosize": true
+    }
+    </script>
+  </div>
+  <!-- TradingView Widget END -->
+
+  <!-- Practice Trading Panel -->
+  <div id="panel">
+    <div class="row">
+      Amount: <input id="amount" type="number" value="100">
+    </div>
+    <div class="row">
+      Stop Loss: <input id="stop" type="number" value="330">
+    </div>
+    <div class="row">
+      <button onclick="buy()">Buy</button>
+      <button onclick="sell()">Sell</button>
+      <button onclick="cancelTrade()">Cancel</button>
+    </div>
+    <div class="row" id="status">No trade yet</div>
+  </div>
 </div>
-<!-- TradingView Widget END -->
+
+<script>
+let inTrade=false, entry=0, stop=0, isLong=false, amount=0;
+let currentPrice=0;
+
+// লাইভ প্রাইস API (Yahoo Finance demo)
+async function fetchPrice(){
+  try {
+    let res = await fetch("https://query1.finance.yahoo.com/v7/finance/quote?symbols=AAPL");
+    let data = await res.json();
+    currentPrice = data.quoteResponse.result[0].regularMarketPrice;
+  } catch(e){
+    console.log("Price fetch error", e);
+  }
+}
+
+function buy(){
+  if(!inTrade){
+    entry=currentPrice;
+    stop=parseFloat(document.getElementById('stop').value);
+    amount=parseFloat(document.getElementById('amount').value);
+    inTrade=true; isLong=true;
+    updateStatus("BUY at "+entry+" | Stop "+stop+" | Amount "+amount+" | PnL: 0");
+  }
+}
+function sell(){
+  if(!inTrade){
+    entry=currentPrice;
+    stop=parseFloat(document.getElementById('stop').value);
+    amount=parseFloat(document.getElementById('amount').value);
+    inTrade=true; isLong=false;
+    updateStatus("SELL at "+entry+" | Stop "+stop+" | Amount "+amount+" | PnL: 0");
+  }
+}
+function cancelTrade(){
+  if(inTrade){
+    inTrade=false; entry=0; stop=0; amount=0; isLong=false;
+    updateStatus("Trade cancelled");
+  }
+}
+function updateStatus(msg){
+  document.getElementById('status').innerText=msg;
+}
+
+// লাইভ প্রাইস দিয়ে PnL আপডেট
+setInterval(async ()=>{
+  await fetchPrice();
+  if(inTrade && currentPrice>0){
+    let pnl = isLong ? (currentPrice - entry) * amount : (entry - currentPrice) * amount;
+    let status = (isLong ? "BUY" : "SELL")+" at "+entry+" | Stop "+stop+" | Amount "+amount+" | PnL: "+pnl.toFixed(2);
+    document.getElementById('status').innerText=status;
+    // stop loss check
+    if(isLong && currentPrice <= stop){ cancelTrade(); }
+    if(!isLong && currentPrice >= stop){ cancelTrade(); }
+  }
+},5000);
+</script>
+</body>
+</html>
