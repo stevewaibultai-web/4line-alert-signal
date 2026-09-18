@@ -3,36 +3,33 @@
 <head>
   <title>Trading Dashboard</title>
   <style>
-    body { font-family: Arial; background:#0F0F0F; color:#fff; }
-    #dashboard { width:100%; max-width:900px; margin:auto; }
-    #panel { background:#1a1a1a; padding:15px; border-radius:8px; margin-top:20px; }
-    .row { margin:10px 0; }
+    body { font-family: Arial; background:#0F0F0F; color:#fff; margin:0; padding:0; }
+    #dashboard { width:100%; height:100vh; display:flex; flex-direction:column; }
+    #chart { flex:3; }   /* চার্ট বেশি জায়গা নেবে */
+    #panel { flex:1; background:#1a1a1a; padding:15px; border-top:2px solid #333; }
+    .row { margin:8px 0; }
     button { padding:8px 12px; margin-right:10px; }
+    input { width:100px; }
   </style>
 </head>
 <body>
 <div id="dashboard">
   <!-- TradingView Chart (unchanged) -->
-  <!-- TradingView Widget BEGIN -->
-  <div class="tradingview-widget-container" style="height:500px;width:100%">
-    <div class="tradingview-widget-container__widget" style="height:100%;width:100%"></div>
-    <div class="tradingview-widget-copyright">
-      <a href="https://www.tradingview.com/symbols/NASDAQ-AAPL/" target="_blank">
-        <span class="blue-text">AAPL stock chart</span>
-      </a><span class="trademark"> by TradingView</span>
+  <div id="chart">
+    <div class="tradingview-widget-container" style="height:100%;width:100%">
+      <div class="tradingview-widget-container__widget" style="height:100%;width:100%"></div>
+      <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
+      {
+        "symbol": "NASDAQ:AAPL",
+        "interval": "D",
+        "theme": "dark",
+        "autosize": true,
+        "backgroundColor": "#0F0F0F",
+        "gridColor": "rgba(242, 242, 242, 0.2)"
+      }
+      </script>
     </div>
-    <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
-    {
-      "symbol": "NASDAQ:AAPL",
-      "interval": "D",
-      "theme": "dark",
-      "autosize": true,
-      "backgroundColor": "#0F0F0F",
-      "gridColor": "rgba(242, 242, 242, 0.2)"
-    }
-    </script>
   </div>
-  <!-- TradingView Widget END -->
 
   <!-- Practice Trading Panel -->
   <div id="panel">
@@ -64,7 +61,7 @@ function buy(){
 }
 function sell(){
   if(!inTrade){
-    entry=337; // demo current price
+    entry=337;
     stop=parseFloat(document.getElementById('stop').value);
     amount=parseFloat(document.getElementById('amount').value);
     inTrade=true; isLong=false;
